@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import com.example.demo.service.CustomerService;
 import com.example.demo.model.entity.Customer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,8 +11,12 @@ import java.util.List;
 @RequestMapping("/api/customer")
 public class CustomerController {
 	
-	@Autowired
-    private CustomerService customerService;
+	private final CustomerService customerService;
+
+    // Inyección mediante constructor
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
 
     @GetMapping
     public List<Customer> getAllCustomers() {

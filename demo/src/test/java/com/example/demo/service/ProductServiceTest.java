@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.controller.AuthController;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.entity.Product;
 import com.example.demo.repository.ProductRepository;
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
@@ -21,16 +23,22 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ActiveProfiles("test")
 @ImportAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
-public class ProductServiceTest {
+class ProductServiceTest {
 
     @MockBean
     private ProductRepository productRepository;
+
+    @MockBean
+    private UserDetailsService userDetailsService;
+
+    @MockBean
+    private AuthController authController;
 
     @Autowired
     private ProductService productService;
 
     @Test
-    public void testFindAll() {
+    void testFindAll() {
         Product product1 = new Product();
         product1.setProductId(1);
         product1.setNombre("Product 1");
@@ -52,18 +60,19 @@ public class ProductServiceTest {
     }
 
     @Test
-    public void testFindById_ResourceNotFound() {
+    void testFindById_ResourceNotFound() {
         when(productRepository.findById(1)).thenReturn(Optional.empty());
 
-        Exception exception = assertThrows(ResourceNotFoundException.class, () -> {
-            productService.findById(1).orElseThrow(() -> new ResourceNotFoundException("Product not found with id: 1"));
-        });
+        ResourceNotFoundException exception = assertThrows(
+            ResourceNotFoundException.class,
+            () -> productService.findByIdOrThrow(1)
+        );
 
         assertEquals("Product not found with id: 1", exception.getMessage());
     }
 
     @Test
-    public void testSave() {
+    void testSave() {
         Product product = new Product();
         product.setNombre("Product 1");
         product.setPrecio(new BigDecimal("100"));
@@ -78,7 +87,7 @@ public class ProductServiceTest {
     }
 
     @Test
-    public void testDeleteById() {
+    void testDeleteById() {
         productService.deleteById(1);
         verify(productRepository, times(1)).deleteById(1);
     }
