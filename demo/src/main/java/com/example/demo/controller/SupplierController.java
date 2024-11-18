@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.entity.Supplier;
 import com.example.demo.service.SupplierService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +14,15 @@ import java.util.List;
 @RequestMapping("/api/suppliers")
 public class SupplierController {
 
-    @Autowired
-    private SupplierService supplierService;
+    private final SupplierService supplierService;
+    
+    // Constante para el mensaje de error
+    private static final String SUPPLIER_NOT_FOUND = "Supplier not found with id: ";
+
+    // Inyección mediante constructor
+    public SupplierController(SupplierService supplierService) {
+        this.supplierService = supplierService;
+    }
 
     @GetMapping
     public List<Supplier> getAllSuppliers() {
@@ -26,7 +32,7 @@ public class SupplierController {
     @GetMapping("/{id}")
     public ResponseEntity<Supplier> getSupplierById(@PathVariable Integer id) {
         Supplier supplier = supplierService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND + id));
         return ResponseEntity.ok(supplier);
     }
 
@@ -39,7 +45,7 @@ public class SupplierController {
     @PutMapping("/{id}")
     public ResponseEntity<Supplier> updateSupplier(@PathVariable Integer id, @RequestBody Supplier supplierDetails) {
         Supplier supplier = supplierService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(SUPPLIER_NOT_FOUND + id));
 
         supplier.setName(supplierDetails.getName());
         supplier.setContactInfo(supplierDetails.getContactInfo());
@@ -50,7 +56,13 @@ public class SupplierController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSupplier(@PathVariable Integer id) {
-        supplierService.deleteById(id);
+    	// Validar si el producto existe y eliminarlo si está presente
+        supplierService.findById(id)
+                .ifPresentOrElse(
+                        product -> supplierService.deleteById(id),
+                        () -> { throw new ResourceNotFoundException(SUPPLIER_NOT_FOUND + id); }
+                );
+
         return ResponseEntity.noContent().build();
     }
 }

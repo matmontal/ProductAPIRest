@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.entity.Product;
 import com.example.demo.service.ProductService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +14,15 @@ import java.util.List;
 @RequestMapping("/api/products")
 public class ProductController {
 
-	@Autowired
-    private ProductService productService;
+    private final ProductService productService;
+
+    // Constante para el mensaje de error
+    private static final String PRODUCT_NOT_FOUND = "Product not found with id: ";
+
+    // Inyección mediante constructor
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
 
     @GetMapping
     public List<Product> getAllProducts() {
@@ -26,7 +32,7 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Integer id) {
         Product product = productService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND + id));
         return ResponseEntity.ok(product);
     }
 
@@ -39,7 +45,7 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Integer id, @RequestBody Product productDetails) {
         Product product = productService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND + id));
 
         product.setPrecio(productDetails.getPrecio());
         product.setCantidad(productDetails.getCantidad());
@@ -51,10 +57,13 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Integer id) {
-        Product product = productService.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        // Validar si el producto existe y eliminarlo si está presente
+        productService.findById(id)
+                .ifPresentOrElse(
+                        product -> productService.deleteById(id),
+                        () -> { throw new ResourceNotFoundException(PRODUCT_NOT_FOUND + id); }
+                );
 
-        productService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

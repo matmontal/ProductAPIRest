@@ -6,9 +6,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class DemoApplicationTests {
+class DemoApplicationTests {
 
     @Test
     void contextLoads() {
+        // Este método verifica si el contexto de la aplicación se carga correctamente.
+        // No se necesita una implementación adicional.
     }
 }
