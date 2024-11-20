@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.ServletException;
 
 import java.io.IOException;
+import java.net.http.HttpHeaders;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +27,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
     }
-
+    
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws java.io.IOException, jakarta.servlet.ServletException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+        String requestPath = request.getRequestURI();
+        // Ignorar rutas de Swagger
+        if (requestPath.startsWith("/swagger-ui") || requestPath.startsWith("/v3/api-docs")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String username;

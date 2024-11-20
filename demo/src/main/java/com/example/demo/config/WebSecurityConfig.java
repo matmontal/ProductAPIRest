@@ -14,7 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@Profile("!test")
+/** @Profile("!test") */
 public class WebSecurityConfig {
 	
 	private final JwtAuthFilter jwtAuthFilter;
@@ -22,20 +22,20 @@ public class WebSecurityConfig {
 	public WebSecurityConfig(JwtAuthFilter jwtAuthFilter) {
         this.jwtAuthFilter = jwtAuthFilter;
     }
-
+	
 	@Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/products/**").permitAll()
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	    http
+	        .csrf(csrf -> csrf.disable())
+	        .authorizeHttpRequests(authz -> authz
+	            .requestMatchers("/auth/**").permitAll()
+	            .requestMatchers("/api/products/**", "/api/suppliers/**", "/api/category/**", "/api/customer/**", "/api/orders/**", "/api/product-suppliers/**").permitAll()
+	            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html").permitAll()
+	            .anyRequest().authenticated()
+	        )
+	        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+	    return http.build();
+	}
     
     @Bean
     PasswordEncoder passwordEncoder() {
